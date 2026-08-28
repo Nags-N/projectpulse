@@ -1,0 +1,14 @@
+# ProjectPulse AI - Phase 1 Dependencies
+
+# Backend
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy>=2.0.36
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+
+# Agent (Windows system tray)
+pystray>=0.19.5
+Pillow>=11.0.0
+httpx>=0.28.0
+tzdata>=2024.1
