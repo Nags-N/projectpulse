@@ -1,7 +1,6 @@
-"""HTTP client for sending normalized events to the backend."""
+"""HTTP client for sending normalized events and heartbeat to the backend."""
 
 import logging
-
 import httpx
 
 from agent.config import AgentConfig
@@ -36,6 +35,10 @@ class BackendClient:
         if not self.is_ready:
             self.event_queue.enqueue(event)
             return False
+
+        # Ensure agent_id is populated from config
+        if not event.agent_id or event.agent_id == "AGENT-DEFAULT":
+            event.agent_id = self.config.agent_id
 
         try:
             payload = event.model_dump(mode="json")
@@ -82,8 +85,19 @@ class BackendClient:
             logger.warning("Failed to update monitoring status: %s", exc)
             return False
 
+    def send_heartbeat(self) -> bool:
+        try:
+            response = httpx.post(
+                f"{self.base_url}/api/agents/heartbeat",
+                json={"agent_id": self.config.agent_id, "monitoring_active": self.config.monitoring_active},
+                timeout=3.0,
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
+
     def ensure_registered(self) -> bool:
-        """Register user and project with backend if IDs are missing."""
+        """Register user, project, and agent installation with backend."""
         if not self.health_check():
             return False
 
@@ -91,7 +105,7 @@ class BackendClient:
             if not self.config.user_id:
                 response = httpx.post(
                     f"{self.base_url}/api/users",
-                    json={"name": self.config.user_name, "role": "DEVELOPER"},
+                    json={"name": self.config.user_name, "role": self.config.role},
                     timeout=5.0,
                 )
                 response.raise_for_status()
@@ -110,6 +124,20 @@ class BackendClient:
                 response.raise_for_status()
                 self.config.project_id = response.json()["project_id"]
 
+            # Register Agent entity with backend
+            httpx.post(
+                f"{self.base_url}/api/agents/register",
+                json={
+                    "agent_id": self.config.agent_id,
+                    "user_id": self.config.user_id,
+                    "project_id": self.config.project_id,
+                    "role": self.config.role,
+                    "machine_name": self.config.machine_name,
+                    "machine_id": self.config.machine_id,
+                },
+                timeout=5.0,
+            )
+
             self.config.save()
             self._registered = True
             self.flush_queue()
@@ -125,6 +153,8 @@ class BackendClient:
 
     def _send_direct(self, event: ProjectEventCreate) -> bool:
         try:
+            if not event.agent_id or event.agent_id == "AGENT-DEFAULT":
+                event.agent_id = self.config.agent_id
             payload = event.model_dump(mode="json")
             response = httpx.post(
                 f"{self.base_url}/api/events",

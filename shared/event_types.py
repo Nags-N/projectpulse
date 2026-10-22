@@ -1,0 +1,78 @@
+"""Shared event types and role definitions for ProjectPulse AI."""
+
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    DEVELOPER = "DEVELOPER"
+    TESTER = "TESTER"
+    QA = "QA"
+    DEVOPS = "DEVOPS"
+    DESIGNER = "DESIGNER"
+    PROJECT_MANAGER = "PROJECT_MANAGER"
+
+
+class EventSource(str, Enum):
+    # Agent Collectors
+    FILE = "FILE"
+    GIT = "GIT"
+    BUILD = "BUILD"
+    TEST = "TEST"
+    QA = "QA"
+    VS_CODE = "VS_CODE"
+    TERMINAL = "TERMINAL"
+
+    # External Project Management Integrations
+    JIRA = "JIRA"
+    MONDAY = "MONDAY"
+    ASANA = "ASANA"
+    TRELLO = "TRELLO"
+    CLICKUP = "CLICKUP"
+    LINEAR = "LINEAR"
+
+
+class EventType(str, Enum):
+    # Session & Lifecycle
+    PROJECT_SESSION_STARTED = "PROJECT_SESSION_STARTED"
+    PROJECT_SESSION_ENDED = "PROJECT_SESSION_ENDED"
+    PROJECT_OPENED = "PROJECT_OPENED"
+
+    # File Activity
+    FILE_CREATED = "FILE_CREATED"
+    FILE_MODIFIED = "FILE_MODIFIED"
+    FILE_DELETED = "FILE_DELETED"
+    FILE_OPENED = "FILE_OPENED"
+
+    # Git Activity
+    GIT_COMMIT = "GIT_COMMIT"
+    GIT_BRANCH_CREATED = "GIT_BRANCH_CREATED"
+    GIT_BRANCH_CHANGED = "GIT_BRANCH_CHANGED"
+    GIT_PULL = "GIT_PULL"
+    GIT_PUSH = "GIT_PUSH"
+
+    # Build Activity
+    BUILD_STARTED = "BUILD_STARTED"
+    BUILD_SUCCEEDED = "BUILD_SUCCEEDED"
+    BUILD_FAILED = "BUILD_FAILED"
+
+    # Tester Activity
+    TEST_STARTED = "TEST_STARTED"
+    TEST_COMPLETED = "TEST_COMPLETED"
+    TEST_PASSED = "TEST_PASSED"
+    TEST_FAILED = "TEST_FAILED"
+
+    # QA Activity
+    BUG_REPORTED = "BUG_REPORTED"
+    BUG_VERIFIED = "BUG_VERIFIED"
+    BUG_REOPENED = "BUG_REOPENED"
+    BUG_CLOSED = "BUG_CLOSED"
+    REGRESSION_STARTED = "REGRESSION_STARTED"
+    REGRESSION_COMPLETED = "REGRESSION_COMPLETED"
+    QA_APPROVED = "QA_APPROVED"
+    QA_REJECTED = "QA_REJECTED"
+
+    # Project Management Tasks
+    TASK_CREATED = "TASK_CREATED"
+    TASK_UPDATED = "TASK_UPDATED"
+    TASK_ASSIGNED = "TASK_ASSIGNED"
+    TASK_STATUS_CHANGED = "TASK_STATUS_CHANGED"

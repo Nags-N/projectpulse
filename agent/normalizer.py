@@ -42,4 +42,4 @@ class EventNormalizer:
             timestamp=timestamp or utc_now(),
             metadata=metadata or {},
         )
-# Git tracking test 2
+# Git tracking test

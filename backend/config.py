@@ -5,12 +5,31 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+ROOT_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = ROOT_DIR / ".env"
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="PROJECTPULSE_")
+    model_config = SettingsConfigDict(
+        env_file=str(ENV_FILE) if ENV_FILE.exists() else ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     app_name: str = "ProjectPulse AI"
     database_url: str = "sqlite:///./data/projectpulse.db"
     api_prefix: str = "/api"
+
+    # Real Jira Cloud Configuration
+    jira_base_url: str = ""
+    jira_email: str = ""
+    jira_api_token: str = ""
+    jira_project_key: str = "KAN"
+
+    # AI Service Configuration (Optional LLM keys)
+    gemini_api_key: str = ""
+    openai_api_key: str = ""
+    ai_model_name: str = "gemini-1.5-flash"
 
     @property
     def data_dir(self) -> Path:

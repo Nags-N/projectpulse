@@ -1,25 +1,31 @@
-"""Agent configuration — allowlist-based project folder monitoring."""
+"""Agent configuration — role-aware, multi-profile support."""
 
 import json
+import platform
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CONFIG_PATH = Path(__file__).resolve().parent / "config" / "agent_config.json"
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent / "config" / "agent_config.json"
 
 
 @dataclass
 class AgentConfig:
-    project_name: str = "Unconfigured Project"
+    agent_id: str = "AGENT-DEV-001"
+    user_id: str = "DEV-001"
+    user_name: str = "Alex Rivera"
+    project_id: str = "DLX"
+    project_name: str = "DLX E-Commerce Platform"
+    role: str = "DEVELOPER"  # DEVELOPER, TESTER, QA, DEVOPS, DESIGNER
+    machine_name: str = field(default_factory=platform.node)
+    machine_id: str = "LOCAL-MACHINE"
     project_folder: str = ""
-    project_id: str = ""
-    user_id: str = ""
-    user_name: str = "Developer"
     backend_url: str = "http://127.0.0.1:8000"
     frontend_url: str = "http://127.0.0.1:5173"
     monitoring_active: bool = True
     allowed_sources: list[str] = field(
-        default_factory=lambda: ["VS_CODE", "GIT", "TERMINAL", "BUILD"]
+        default_factory=lambda: ["FILE", "GIT", "BUILD", "TEST", "QA", "VS_CODE"]
     )
+    config_file_path: Path = field(default=DEFAULT_CONFIG_PATH)
 
     @property
     def project_path(self) -> Path | None:
@@ -40,43 +46,59 @@ class AgentConfig:
         except ValueError:
             return False
 
-    def save(self) -> None:
-        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        CONFIG_PATH.write_text(
-            json.dumps(
-                {
-                    "project_name": self.project_name,
-                    "project_folder": self.project_folder,
-                    "project_id": self.project_id,
-                    "user_id": self.user_id,
-                    "user_name": self.user_name,
-                    "backend_url": self.backend_url,
-                    "frontend_url": self.frontend_url,
-                    "monitoring_active": self.monitoring_active,
-                    "allowed_sources": self.allowed_sources,
-                },
-                indent=2,
-            ),
+    def to_dict(self) -> dict:
+        return {
+            "agent_id": self.agent_id,
+            "user_id": self.user_id,
+            "user_name": self.user_name,
+            "project_id": self.project_id,
+            "project_name": self.project_name,
+            "role": self.role,
+            "machine_name": self.machine_name,
+            "machine_id": self.machine_id,
+            "project_folder": self.project_folder,
+            "backend_url": self.backend_url,
+            "frontend_url": self.frontend_url,
+            "monitoring_active": self.monitoring_active,
+            "allowed_sources": self.allowed_sources,
+        }
+
+    def save(self, target_path: Path | None = None) -> None:
+        p = target_path or self.config_file_path or DEFAULT_CONFIG_PATH
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(
+            json.dumps(self.to_dict(), indent=2),
             encoding="utf-8",
         )
 
     @classmethod
-    def load(cls) -> "AgentConfig":
-        if not CONFIG_PATH.exists():
-            cfg = cls()
-            cfg.save()
+    def load(cls, custom_path: Path | None = None) -> "AgentConfig":
+        p = custom_path or DEFAULT_CONFIG_PATH
+        if not p.exists():
+            cfg = cls(config_file_path=p)
+            cfg.save(p)
             return cfg
-        data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        return cls(
-            project_name=data.get("project_name", "Unconfigured Project"),
-            project_folder=data.get("project_folder", ""),
-            project_id=data.get("project_id", ""),
-            user_id=data.get("user_id", ""),
-            user_name=data.get("user_name", "Developer"),
-            backend_url=data.get("backend_url", "http://127.0.0.1:8000"),
-            frontend_url=data.get("frontend_url", "http://127.0.0.1:5173"),
-            monitoring_active=data.get("monitoring_active", True),
-            allowed_sources=data.get(
-                "allowed_sources", ["VS_CODE", "GIT", "TERMINAL", "BUILD"]
-            ),
-        )
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            return cls(
+                agent_id=data.get("agent_id", "AGENT-DEV-001"),
+                user_id=data.get("user_id", "DEV-001"),
+                user_name=data.get("user_name", "Alex Rivera"),
+                project_id=data.get("project_id", "DLX"),
+                project_name=data.get("project_name", "DLX E-Commerce Platform"),
+                role=data.get("role", "DEVELOPER"),
+                machine_name=data.get("machine_name", platform.node()),
+                machine_id=data.get("machine_id", "LOCAL-MACHINE"),
+                project_folder=data.get("project_folder", ""),
+                backend_url=data.get("backend_url", "http://127.0.0.1:8000"),
+                frontend_url=data.get("frontend_url", "http://127.0.0.1:5173"),
+                monitoring_active=data.get("monitoring_active", True),
+                allowed_sources=data.get(
+                    "allowed_sources", ["FILE", "GIT", "BUILD", "TEST", "QA", "VS_CODE"]
+                ),
+                config_file_path=p,
+            )
+        except Exception:
+            cfg = cls(config_file_path=p)
+            cfg.save(p)
+            return cfg

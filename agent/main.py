@@ -1,5 +1,6 @@
-"""ProjectPulse AI — Windows background agent entry point."""
+"""ProjectPulse AI — Role-Aware Background Agent Entry Point."""
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -12,11 +13,23 @@ from agent.tray_app import TrayApp
 
 
 def main():
-    config = AgentConfig.load()
+    parser = argparse.ArgumentParser(description="ProjectPulse AI Agent")
+    parser.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default=None,
+        help="Path to custom agent configuration JSON file (e.g. for multi-instance simulation)",
+    )
+    args = parser.parse_args()
+
+    custom_path = Path(args.config).resolve() if args.config else None
+    config = AgentConfig.load(custom_path)
+    print(f"[*] Starting ProjectPulse Agent: ID={config.agent_id} | Role={config.role} | Project={config.project_id}")
+
     app = TrayApp(config)
     app.run()
 
 
 if __name__ == "__main__":
     main()
-# Live tracking test

@@ -1,14 +1,22 @@
 {
-  "project_name": "Git Test Project",
+  "agent_id": "AGENT-DEV-001",
+  "user_id": "DEV-001",
+  "user_name": "Alex Rivera",
+  "project_id": "DLX",
+  "project_name": "DLX E-Commerce Platform",
+  "role": "DEVELOPER",
+  "machine_name": "DEV-PC",
+  "machine_id": "MAC-01",
   "project_folder": "E:\\projects\\projectpulse",
-  "project_id": "9ce5c3b5-6742-4694-a723-a84e50078c3b",
-  "user_id": "0c51f0b9-9b17-40cb-8d96-b69fe85bc85b",
-  "user_name": "M3 Git Tester",
   "backend_url": "http://127.0.0.1:8000",
   "frontend_url": "http://127.0.0.1:5173",
   "monitoring_active": true,
   "allowed_sources": [
-    "VS_CODE",
-    "GIT"
+    "FILE",
+    "GIT",
+    "BUILD",
+    "TEST",
+    "QA",
+    "VS_CODE"
   ]
 }

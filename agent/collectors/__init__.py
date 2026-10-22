@@ -1,11 +1,14 @@
-"""Source collectors — VS Code file watcher and future Git/Build collectors."""
+"""Source collectors — File watcher, Git activity, Build, Test, and QA collectors."""
 
 import logging
 
 from agent.backend_client import BackendClient
 from agent.collectors.base import BaseCollector
+from agent.collectors.build_collector import BuildCollector
 from agent.collectors.file_watcher import ProjectFileWatcherCollector
 from agent.collectors.git_watcher import GitActivityCollector
+from agent.collectors.qa_collector import QACollector
+from agent.collectors.test_collector import TestCollector
 from agent.config import AgentConfig
 from agent.normalizer import EventNormalizer
 from agent.privacy_filter import PrivacyFilter
@@ -14,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class CollectorManager:
-    """Manages VS Code, Git, Terminal, and Build collectors."""
+    """Manages File, Git, Build, Test, and QA collectors based on active role."""
 
     def __init__(self, config: AgentConfig, backend: BackendClient):
         self.config = config
@@ -41,14 +44,33 @@ class CollectorManager:
         )
         collectors: list[BaseCollector] = []
 
-        if "VS_CODE" in self.config.allowed_sources:
-            collectors.append(ProjectFileWatcherCollector(**common))
+        sources = set(self.config.allowed_sources)
+        role = getattr(self.config, "role", "DEVELOPER")
 
-        if "GIT" in self.config.allowed_sources:
-            collectors.append(GitActivityCollector(**common))
+        # Developer Collectors
+        if role in ("DEVELOPER", "DEVOPS"):
+            if "VS_CODE" in sources or "FILE" in sources:
+                collectors.append(ProjectFileWatcherCollector(**common))
+            if "GIT" in sources:
+                collectors.append(GitActivityCollector(**common))
+            if "BUILD" in sources:
+                collectors.append(BuildCollector(**common))
 
-        # Terminal, Build collectors added in Milestone 4
+        # Tester Collectors
+        if role in ("TESTER", "QA") or "TEST" in sources:
+            collectors.append(TestCollector(**common))
+
+        # QA Specific Collectors
+        if role == "QA" or "QA" in sources:
+            collectors.append(QACollector(**common))
+
         return collectors
+
+    def get_collector(self, source_name: str) -> BaseCollector | None:
+        for c in self._collectors:
+            if c.source_name == source_name:
+                return c
+        return None
 
     def start(self) -> None:
         if self._collectors:
